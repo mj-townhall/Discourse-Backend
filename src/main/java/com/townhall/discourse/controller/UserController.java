@@ -1,5 +1,6 @@
 package com.townhall.discourse.controller;
 
+import com.townhall.discourse.dto.CommentDto;
 import com.townhall.discourse.dto.PostDto;
 import com.townhall.discourse.dto.Status;
 import com.townhall.discourse.entities.CommentData;
@@ -33,18 +34,26 @@ public class UserController {
         return new ResponseEntity<>(status,HttpStatus.OK);
     }
     @PostMapping("/addComment")
-    CommentData addComment(@RequestBody CommentData commentData){
-        return commentData;
+    ResponseEntity<Status> addComment(@RequestBody CommentData commentData){
+        Status status=postService.addComment(commentData);
+        return new ResponseEntity<>(status,HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{postId}")
     ResponseEntity<Status> deletePost(@PathVariable int postId){
-        Status status= Status.builder()
-                .id(postId)
-                .message("post succesfully deleted with id = "+postId)
-                .build();
+        Status status = postService.deletePost(postId);
+        return new ResponseEntity<>(status, HttpStatus.OK);
+    }
+    @DeleteMapping("/delete/comment/{cId}")
+    ResponseEntity<Status> deleteComment(@PathVariable int commentId){
+        Status status = postService.deleteComment(commentId);
         return new ResponseEntity<>(status, HttpStatus.OK);
     }
 
+    @GetMapping("/comment/{postId}")
+    ResponseEntity<List<CommentDto>> getComments(@PathVariable int postId){
+        List<CommentDto> commentDtoList=postService.getComments(postId);
+        return new ResponseEntity<>(commentDtoList,HttpStatus.OK);
+    }
 
 }

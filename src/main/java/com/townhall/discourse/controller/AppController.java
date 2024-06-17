@@ -1,7 +1,6 @@
 package com.townhall.discourse.controller;
 
 import com.townhall.discourse.dto.PostDto;
-import com.townhall.discourse.entities.PostData;
 import com.townhall.discourse.service.PostService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
