@@ -25,9 +25,11 @@ public class CommentData {
     private PostData postData;
 
     @Column(nullable = false)
-    private long timeStampMillis;
+    private long createdAt;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(nullable = false)
+    private int votes=0;
 }

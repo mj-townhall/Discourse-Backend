@@ -12,10 +12,12 @@ import lombok.NoArgsConstructor;
 public class PostDto {
 
     private int id;
-    private long timeStampMillis;
+    private long createdAt;
     private String content;
     private int userId;
     private String email;
     private String firstName;
-    private String LastName;
+    private String lastName;
+    private int votes;
+    private String title;
 }

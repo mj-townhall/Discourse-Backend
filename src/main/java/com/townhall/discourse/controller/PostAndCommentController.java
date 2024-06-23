@@ -16,35 +16,41 @@ import java.util.List;
 
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/user")
-public class UserController {
+@RequestMapping("/api")
+public class PostAndCommentController {
     @Autowired
     PostService postService;
 
-    @GetMapping("/posts/{userId}")
+    @GetMapping("/post")
+    ResponseEntity<List<PostDto>> getAllPosts(){
+        List<PostDto> postDtoList=postService.getAllPosts();
+        return new ResponseEntity<>(postDtoList, HttpStatus.OK);
+    }
+
+    @GetMapping("/post/{userId}")
     ResponseEntity<List<PostDto>> getPostsByUser(@PathVariable int userId){
         System.out.println(userId);
         List<PostDto> postDtoList=postService.getPostsByUser(userId);
         return new ResponseEntity<>(postDtoList,HttpStatus.OK);
     }
 
-    @PostMapping("/addPost")
+    @PostMapping("/post")
     ResponseEntity<Status> addPost(@RequestBody PostData postData){
         Status status=postService.addPost(postData);
         return new ResponseEntity<>(status,HttpStatus.OK);
     }
-    @PostMapping("/addComment")
+    @PostMapping("/comment")
     ResponseEntity<Status> addComment(@RequestBody CommentData commentData){
         Status status=postService.addComment(commentData);
         return new ResponseEntity<>(status,HttpStatus.OK);
     }
 
-    @DeleteMapping("/delete/{postId}")
+    @DeleteMapping("/post/{postId}")
     ResponseEntity<Status> deletePost(@PathVariable int postId){
         Status status = postService.deletePost(postId);
         return new ResponseEntity<>(status, HttpStatus.OK);
     }
-    @DeleteMapping("/delete/comment/{cId}")
+    @DeleteMapping("/comment/{cId}")
     ResponseEntity<Status> deleteComment(@PathVariable int commentId){
         Status status = postService.deleteComment(commentId);
         return new ResponseEntity<>(status, HttpStatus.OK);
@@ -56,4 +62,9 @@ public class UserController {
         return new ResponseEntity<>(commentDtoList,HttpStatus.OK);
     }
 
+    @PutMapping("/post")
+    ResponseEntity<Status> editPost(@RequestBody PostData postData){
+        Status status=postService.editPost(postData);
+        return new ResponseEntity<>(status,HttpStatus.OK);
+    }
 }

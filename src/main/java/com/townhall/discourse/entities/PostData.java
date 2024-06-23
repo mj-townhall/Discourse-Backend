@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,8 +25,18 @@ public class PostData {
 
 
     @Column(nullable = false)
-    private long timeStampMillis;
+    private long createdAt;
+
+    @Column(nullable = false)
+    private String title;
 
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Column(nullable = false)
+    private int votes=0;
+
+    @OneToMany(mappedBy = "postData", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<CommentData> comments = new ArrayList<>();
+
 }

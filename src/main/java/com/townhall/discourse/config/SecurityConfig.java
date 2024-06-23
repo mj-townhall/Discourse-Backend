@@ -9,7 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+
 
 @RequiredArgsConstructor
 @Configuration
@@ -26,11 +28,22 @@ public class SecurityConfig {
                 .addFilterBefore(new JwtAuthFilter(userAuthenticationProvider), BasicAuthenticationFilter.class)
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth ->
+                        auth.requestMatchers("/api/users/**").authenticated()
+                                .requestMatchers(HttpMethod.GET, "/api/posts/{uId}").authenticated()
+                                .requestMatchers(HttpMethod.DELETE, "/api/delete/{pId}").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/addPost").authenticated()
+                                .requestMatchers(HttpMethod.POST, "/api/addComment").authenticated()
+                                .anyRequest().permitAll())
 //                .authorizeHttpRequests((requests) -> requests
-//                        .requestMatchers(HttpMethod.POST, "/login", "/register").permitAll()
-//                        .anyRequest().authenticated())
-                .authorizeHttpRequests((requests) -> requests
-                        .anyRequest().permitAll())
+//                        .anyRequest().permitAll())
+                .logout(logout ->
+                        logout
+                                .logoutUrl("/logout") // Specify the logout URL
+                                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler()) // Handle successful logout with HTTP status
+                                .permitAll() // Allow anyone to access the logout URL
+                )
+
         ;
         return http.build();
     }

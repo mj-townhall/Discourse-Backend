@@ -40,9 +40,10 @@ public class AuthController {
         }
         return new ResponseEntity<>(userDto, HttpStatus.OK);
     }
-    @GetMapping("/login")
+    @PostMapping("/login")
     public ResponseEntity<UserDto> login(@RequestBody CredentialsDto credentialsDto) {
         UserDto userDto=new UserDto();
+        System.out.println(credentialsDto);
         try {
             userDto = userService.login(credentialsDto);
             userDto.setToken(userAuthenticationProvider.createToken(userDto));
@@ -53,6 +54,11 @@ public class AuthController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(new UserDto("Internal server error occurred"));
         }
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<String> logout(){
+        return new ResponseEntity<>("succesfully logged out",HttpStatus.OK);
     }
 
 }

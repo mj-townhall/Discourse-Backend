@@ -7,7 +7,12 @@ import com.townhall.discourse.dto.PostDto;
 import com.townhall.discourse.dto.Status;
 import com.townhall.discourse.entities.CommentData;
 import com.townhall.discourse.entities.PostData;
+import com.townhall.discourse.exception.AppException;
 import com.townhall.discourse.mapper.UserMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import org.springframework.http.HttpStatus;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -22,6 +27,8 @@ public class PostService {
     PostDataDao postDataDao;
     @Autowired
     CommentDataDao commentDataDao;
+    @PersistenceContext
+    private EntityManager entityManager;
     private final UserMapper userMapper;
     public List<PostDto> getAllPosts(){
         List<PostData> postDataList=postDataDao.findAll();
@@ -52,7 +59,7 @@ public class PostService {
     }
     public Status addPost(PostData postData){
         try {
-            postData.setTimeStampMillis(System.currentTimeMillis());
+            postData.setCreatedAt(System.currentTimeMillis());
             postDataDao.save(postData);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -62,6 +69,19 @@ public class PostService {
                 .message("Post succesfully added with id = "+postData.getId())
                 .build();
     }
+
+    @Transactional
+    public Status editPost(PostData postData){
+        PostData postToBeUpdated=entityManager.find(PostData.class,postData.getId());
+        if(postToBeUpdated!=null){
+            postToBeUpdated=postData;
+            entityManager.merge(postData);
+            return Status.builder().id(postData.getId()).message("post updated with id = "+postData.getId()).build();
+        }
+        throw new AppException("no post found with id = "+postData.getId(), HttpStatus.BAD_REQUEST);
+
+    }
+
     public Status deletePost(int postId){
         try {
             postDataDao.deleteById(postId);
@@ -76,7 +96,7 @@ public class PostService {
     }
     public Status addComment(CommentData commentData){
         try {
-            commentData.setTimeStampMillis(System.currentTimeMillis());
+            commentData.setCreatedAt(System.currentTimeMillis());
             commentDataDao.save(commentData);
         } catch (Exception e) {
             throw new RuntimeException(e);
