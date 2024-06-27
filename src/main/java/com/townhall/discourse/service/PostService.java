@@ -2,11 +2,14 @@ package com.townhall.discourse.service;
 
 import com.townhall.discourse.dao.CommentDataDao;
 import com.townhall.discourse.dao.PostDataDao;
+import com.townhall.discourse.dao.PostVoteDataDao;
 import com.townhall.discourse.dto.CommentDto;
 import com.townhall.discourse.dto.PostDto;
 import com.townhall.discourse.dto.Status;
 import com.townhall.discourse.entities.CommentData;
 import com.townhall.discourse.entities.PostData;
+import com.townhall.discourse.entities.PostVoteData;
+import com.townhall.discourse.entities.VoteType;
 import com.townhall.discourse.exception.AppException;
 import com.townhall.discourse.mapper.UserMapper;
 import jakarta.persistence.EntityManager;
@@ -27,6 +30,9 @@ public class PostService {
     PostDataDao postDataDao;
     @Autowired
     CommentDataDao commentDataDao;
+    @Autowired
+    PostVoteDataDao postVoteDataDao;
+
     @PersistenceContext
     private EntityManager entityManager;
     private final UserMapper userMapper;
@@ -73,13 +79,65 @@ public class PostService {
     @Transactional
     public Status editPost(PostData postData){
         PostData postToBeUpdated=entityManager.find(PostData.class,postData.getId());
+        String message="";
         if(postToBeUpdated!=null){
-            postToBeUpdated=postData;
-            entityManager.merge(postData);
-            return Status.builder().id(postData.getId()).message("post updated with id = "+postData.getId()).build();
+            int voteChange = postData.getVotes()-postToBeUpdated.getVotes();
+            if(voteChange!=0){
+                voteChange= handleVoteUpdateForPost(postData.getId(),postData.getEditBy(), voteChange); // allowed no of vote change
+                if(voteChange==0)message="already voted";
+            }
+            postToBeUpdated.setVotes(postToBeUpdated.getVotes()+voteChange);
+            postToBeUpdated.setContent(postData.getContent());
+            postToBeUpdated.setTitle(postData.getTitle());
+            entityManager.merge(postToBeUpdated);
+            return Status.builder().id(postData.getId()).message(message.isEmpty()? "post updated succesfully":message ).build();
         }
         throw new AppException("no post found with id = "+postData.getId(), HttpStatus.BAD_REQUEST);
+    }
 
+    public int handleVoteUpdateForPost(int postId, int userId, int voteChange){
+        PostVoteData postVoteData=postVoteDataDao.findByPostIdAndUserId(postId,userId);
+        PostVoteData updatedPostVoteData=postVoteData;
+        if(postVoteData!=null){
+            if(voteChange>0) {
+                if (postVoteData.getVoteType().getValue() == 1){
+                    return 0; //already upvoted
+                }
+                else if(postVoteData.getVoteType().getValue()==0){
+                    updatedPostVoteData.setVoteType(VoteType.UPVOTE);
+                    entityManager.merge(updatedPostVoteData);
+                    return 1; // first vote
+                }
+                else{
+                    updatedPostVoteData.setVoteType(VoteType.UPVOTE);
+                    entityManager.merge(updatedPostVoteData);
+                    return 2;  // upvoting after a downvote
+                }
+            }
+            else if(voteChange<0){
+                if (postVoteData.getVoteType().getValue() == 1){
+                    updatedPostVoteData.setVoteType(VoteType.DOWNVOTE);
+                    entityManager.merge(updatedPostVoteData);
+                    return -2;  //down voting after an upvote
+                }
+                else if(postVoteData.getVoteType().getValue()==0){
+                    updatedPostVoteData.setVoteType(VoteType.DOWNVOTE);
+                    entityManager.merge(updatedPostVoteData);
+                    return -1; // first vote
+                }
+                else return 0; //already down voted
+            }
+            else return 0;
+        }
+        else {
+            PostVoteData newPostVoteData=PostVoteData.builder()
+                    .voteType(VoteType.fromValue(voteChange))
+                    .postId(postId)
+                    .userId(userId)
+                    .build();
+            postVoteDataDao.save(newPostVoteData);
+            return voteChange;
+        }
     }
 
     public Status deletePost(int postId){
@@ -107,19 +165,7 @@ public class PostService {
 
     }
     public List<CommentDto> getComments(int postId){
-        List<CommentData> commentDataList=commentDataDao.findCommentsByPostId(postId);
-        List<CommentDto> commentDtoList=new ArrayList<>();
-        for(CommentData c:commentDataList){
-            CommentDto commentDto=userMapper.toCommentDto(c);
-            commentDto.builder()
-                    .userId(c.getUserData().getId())
-                    .postId(c.getPostData().getId())
-                    .email(c.getUserData().getEmail())
-                    .firstName(c.getUserData().getFirstName())
-                    .lastName(c.getUserData().getLastName())
-                    .build();
-            commentDtoList.add(commentDto);
-        }
+        List<CommentDto> commentDtoList=commentDataDao.findCommentsByPostId(postId);
         return commentDtoList;
     }
 

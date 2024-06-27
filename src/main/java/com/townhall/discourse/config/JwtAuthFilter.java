@@ -1,5 +1,6 @@
 package com.townhall.discourse.config;
 
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,7 +37,15 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(
                                 userAuthenticationProvider.validateTokenStrongly(authElements[1]));
                     }
-                } catch (RuntimeException e) {
+                }
+                catch (TokenExpiredException e) {
+                    SecurityContextHolder.clearContext();
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("Token expired");
+                    response.getWriter().flush();
+                    return;
+                }
+                catch (RuntimeException e) {
                     SecurityContextHolder.clearContext();
                     throw e;
                 }

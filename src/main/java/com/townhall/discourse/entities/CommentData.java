@@ -20,9 +20,8 @@ public class CommentData {
     @JoinColumn(name = "userId", nullable = false)
     private UserData userData;
 
-    @ManyToOne
-    @JoinColumn(name = "postId", nullable = false)
-    private PostData postData;
+    @Column(nullable = false)
+    private int postId;
 
     @Column(nullable = false)
     private long createdAt;
@@ -32,4 +31,17 @@ public class CommentData {
 
     @Column(nullable = false)
     private int votes=0;
+
+//    @Override
+//    public String toString() {
+//        return "CommentData{" +
+//                "id=" + id +
+//                ", userId=" + (userData != null ? userData.getId() : null) +
+//                ", postId=" + (postData != null ? postData.getId() : null) +
+//                ", content='" + content + '\'' +
+//                ", createdAt=" + createdAt +
+//                ", votes=" + votes +
+//                '}';
+//    }
+
 }

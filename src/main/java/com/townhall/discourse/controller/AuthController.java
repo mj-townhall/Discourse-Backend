@@ -23,9 +23,9 @@ public class AuthController {
     @Autowired
     UserService userService;
 
-    @GetMapping("/health")
-    public String health() {
-        return "healthy";
+    @GetMapping("/tokenStatus")
+    public String checkIsTokenStillValid() {
+        return "valid";
     }
 
     @PostMapping("/register")

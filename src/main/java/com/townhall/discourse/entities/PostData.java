@@ -36,7 +36,10 @@ public class PostData {
     @Column(nullable = false)
     private int votes=0;
 
-    @OneToMany(mappedBy = "postData", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(nullable = true)
+    private int editBy;
+
+    @OneToMany(mappedBy = "postId", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CommentData> comments = new ArrayList<>();
 
 }
